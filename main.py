@@ -114,7 +114,7 @@ def main():
     INP_REGEX = str(input())
     TEXT = []
     for word in TEXT:
-        # TODO
+        # TOD0
         # If Not valid, return -1 to stderr
         # If valid but reject, pass
         # If valid and accept, print(word)
