@@ -91,37 +91,72 @@ class NFACompiler:
     def __init__(self):
         self.state_counter = 0
         self.transitions = {} # epsilon transitions will be denoted by None
+        self.alphabet = set() # For Debug purposes
 
     def new_state(self): # Returns ID of new state
         self.state_counter += 1
         self.transitions[self.state_counter] = []
         return self.state_counter
-    def add_transition(self, from_st, to_st, symbol, epsilon=False):
-        if not epsilon:
-            self.transitions[from_st].append((symbol, to_st))
-        else:
-            self.transitions[from_st].append((None, to_st))
+    def add_transition(self, from_st, to_st, symbol=None): # If no symbol, then Epsilon Transition
+        self.transitions[from_st].append((symbol, to_st))
+        if symbol is not None:
+            self.alphabet.add(symbol)
 
     def build_nfa(self, node):
         node_type = node[0]
         if node_type == 'literal':
-            pass
+            s = self.new_state()
+            a = self.new_state()
+            self.add_transition(s, a, node[1])
+            return (s, a)
         elif node_type == 'concat':
-            pass
+            l_node, r_node = node[1], node[2]
+            s1, a1 = self.build_nfa(l_node)
+            s2, a2 = self.build_nfa(r_node)
+            self.add_transition(a1, s2)
+            return (s1, a2)
         elif node_type == 'union':
-            pass
+            l_node, r_node = node[1], node[2]
+            s1, a1 = self.build_nfa(l_node)
+            s2, a2 = self.build_nfa(r_node)
+            s = self.new_state()
+            a = self.new_state()
+
+            self.add_transition(s, s1)
+            self.add_transition(s, s2)
+            self.add_transition(a1, a)
+            self.add_transition(a2, a)
+
+            return (s, a)
         elif node_type == 'star':
-            pass
+            child = node[1]
+            s1, a1 = self.build_nfa(child)
+            s = self.new_state()
+            a = self.new_state()
+
+            self.add_transition(s, s1) # Start -> inside start
+            self.add_transition(a1, s1) # Loop back
+            self.add_transition(a1, a) # inside accept -> accept
+            self.add_transition(s, a) # ignore and skip
+
+            return (s, a)
         elif node_type == 'plus':
-            pass
+            # A+ ~= AA* here A is node[1]
+            return self.build_nfa(('concat', node[1], ('star', node[1])))
         elif node_type == 'question':
-            pass
+            child = node[1]
+            s1, a1 = self.build_nfa(child)
+            s = self.new_state()
+            a = self.new_state()
+
+            self.add_transition(s,s1) # Path
+            self.add_transition(a1, a) # Finish Path
+            self.add_transition(s,a) # Skip bs and proceed
+            return (s, a)
         elif node_type == 'group':
-            pass
+            return self.build_nfa(node[1]) # group is just an organized AST, so build NFA from ASY
         elif node_type == 'char_class':
-            pass
-        elif node_type == 'empty':
-            pass
+            pass # TODO FIX
         else:
             raise ValueError(f"Unknown type - {node_type}")
 
