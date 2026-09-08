@@ -1,14 +1,12 @@
-class parser:
+class Parser:
     def __init__(self, inp_rgx):
         self.inp_rgx = inp_rgx
         self.index = 0
-    
     def parse(self): # Entry Point for parsing the expression
         AST = self.parse_union()
         if self.peek() is not None: # If finished parsing but characters left
             raise ValueError(f"Syntax Error: position {self.index} - {self.peek()}") # That means syntax error
         return AST
-    
     def peek(self):
         if self.index < len(self.inp_rgx):
             return self.inp_rgx[self.index]
@@ -37,10 +35,10 @@ class parser:
             raise ValueError("Empty Expression")
         if len(L) == 1:
             return L[0]
-        l = L[0] #Combine into a nested (concat,l,r) node
-        for r in L[1:]:
-            l = ('concat', l, r)
-        return l
+        left = L[0] #Combine into a nested (concat,left,right) node
+        for right in L[1:]:
+            left = ('concat', left, right)
+        return left
 
     def parse_repeat(self):
         literal = self.parse_literal()
@@ -79,25 +77,21 @@ class parser:
                 raise ValueError("Empty Character Class")
             self.consume(']')
             return ('char_class', "".join(charset))
-        
-
         if char == '\\':
             self.consume('\\')
             escaped = self.peek()
             if escaped is None:
                 raise ValueError("Trailing Backslash")
             self.consume()
-            return ('literal', escaped)    
+            return ('literal', escaped)
         else:
             return ('literal', self.consume())
-
-
 
 class NFACompiler:
     def __init__(self):
         self.state_counter = 0
         self.transitions = {} # epsilon transitions will be denoted by None
-    
+
     def new_state(self): # Returns ID of new state
         self.state_counter += 1
         self.transitions[self.state_counter] = []
@@ -107,14 +101,35 @@ class NFACompiler:
             self.transitions[from_st].append((symbol, to_st))
         else:
             self.transitions[from_st].append((None, to_st))
-    
 
+    def build_nfa(self, node):
+        node_type = node[0]
+        if node_type == 'literal':
+            pass
+        elif node_type == 'concat':
+            pass
+        elif node_type == 'union':
+            pass
+        elif node_type == 'star':
+            pass
+        elif node_type == 'plus':
+            pass
+        elif node_type == 'question':
+            pass
+        elif node_type == 'group':
+            pass
+        elif node_type == 'char_class':
+            pass
+        elif node_type == 'empty':
+            pass
+        else:
+            raise ValueError(f"Unknown type - {node_type}")
 
 def main():
-    INP_REGEX = str(input())
+    INP_REGEX = input()
     TEXT = []
     for word in TEXT:
-        # TOD0
+        # TODO
         # If Not valid, return -1 to stderr
         # If valid but reject, pass
         # If valid and accept, print(word)
