@@ -87,7 +87,7 @@ class Parser:
         else:
             return ('literal', self.consume())
 
-class NFACompiler:
+class NFACompile:
     def __init__(self):
         self.state_counter = 0
         self.transitions = {} # epsilon transitions will be denoted by None
@@ -178,6 +178,66 @@ class NFACompiler:
             return (s, a)
         else:
             raise ValueError(f"Unknown type - {node_type}")
+
+class DFACompile:
+    def __init__(self, nfa_transitions, nfa_start, nfa_accept, alphabet):
+        self.nfa_transitions = nfa_transitions
+        self.nfa_start = nfa_start
+        self.nfa_accept = nfa_accept
+        self.alphabet = alphabet
+
+        # DFA states
+        self.dfa_transitions = {}
+        self.dfa_start = None
+        self.dfa_accept = set()
+
+    def epsilon_closure(self, states):
+        S = list(states)
+        C = set(states)
+
+        while S:
+            state = S.pop()
+            for symbol, target in self.nfa_transitions.get(state, []):
+                if symbol is None and target not in C:
+                    C.add(target)
+                    S.append(target)
+        return frozenset(C)
+
+    def move(self, states, symbol):
+        return_set = set()
+        for ele in states:
+            for sym, target in self.nfa_transitions.get(ele, []):
+                if sym == symbol:
+                    return_set.add(target)
+        return return_set
+
+    def compile(self):
+        self.dfa_start = self.epsilon_closure([self.nfa_start])
+        unmarked = [self.dfa_start]
+        self.dfa_transitions[self.dfa_start] = {}
+
+        while unmarked:
+            curr_dfa_state = unmarked.pop(0)
+            if self.nfa_accept in curr_dfa_state:
+                self.dfa_accept.add(curr_dfa_state)
+            for sym in self.alphabet:
+                next_nfa_state = self.move(curr_dfa_state, sym)
+                if not next_nfa_state: continue
+                next_dfa_state = self.epsilon_closure(next_nfa_state)
+
+                if next_dfa_state not in self.dfa_transitions:
+                    self.dfa_transitions[next_dfa_state] = {}
+                    unmarked.append(next_dfa_state)
+
+                self.dfa_transitions[curr_dfa_state][sym] = next_dfa_state
+        return None
+    def match(self, text):
+        curr_state = self.dfa_start
+        for letter in text:
+            if letter not in self.dfa_transitions.get(curr_state, {}):
+                return False
+            curr_state = self.dfa_transitions[curr_state][letter]
+        return curr_state in self.dfa_accept
 
 def main():
     INP_REGEX = input()
