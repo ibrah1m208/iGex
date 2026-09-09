@@ -102,6 +102,19 @@ class NFACompiler:
         if symbol is not None:
             self.alphabet.add(symbol)
 
+    def resolve_charClass(self, raw):
+        chars = set()
+        i,n = 0, len(raw)
+        while i < n:
+            if i+2 < n and raw[i+1] == '-':
+                lo, hi = ord(raw[i]), ord(raw[i+2])
+                if lo <= hi:
+                    chars.update(chr(x) for x in range(lo, hi+1))
+                i+=3
+            else:
+                chars.add(raw[i])
+                i += 1
+        return chars
     def build_nfa(self, node):
         node_type = node[0]
         if node_type == 'literal':
@@ -156,7 +169,13 @@ class NFACompiler:
         elif node_type == 'group':
             return self.build_nfa(node[1]) # group is just an organized AST, so build NFA from ASY
         elif node_type == 'char_class':
-            pass # TODO FIX
+            raw = node[1]
+            chars = self.resolve_charClass(raw)
+            s = self.new_state()
+            a = self.new_state()
+            for ele in chars:
+                self.add_transition(s, a, ele)
+            return (s, a)
         else:
             raise ValueError(f"Unknown type - {node_type}")
 
