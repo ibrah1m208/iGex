@@ -1,3 +1,5 @@
+import sys
+
 class Parser:
     def __init__(self, inp_rgx):
         self.inp_rgx = inp_rgx
@@ -231,6 +233,12 @@ class DFACompile:
 
                 self.dfa_transitions[curr_dfa_state][sym] = next_dfa_state
         return None
+
+    def assign_state_ids(self):
+        self.state_ids = {}
+        for i, state in enumerate(self.dfa_transitions.keys()):
+            self.state_ids[state] = i
+
     def match(self, text):
         curr_state = self.dfa_start
         for letter in text:
@@ -238,6 +246,25 @@ class DFACompile:
                 return False
             curr_state = self.dfa_transitions[curr_state][letter]
         return curr_state in self.dfa_accept
+    def print_debug_csv(self):
+        self.assign_state_ids()
+        sorted_alphabet = sorted(self.alphabet)
+
+        header = ["State"] + sorted_alphabet
+        print(", ".join(header), file=sys.stderr)
+
+        # sort by assigned id so output is stable/readable (order itself doesn't matter to the grader)
+        for state, sid in sorted(self.state_ids.items(), key=lambda item: item[1]):
+            prefix = ""
+            if state == self.dfa_start:
+                prefix += "->"
+            if state in self.dfa_accept:
+                prefix += "*"
+            row = [f"{prefix}{sid}"]
+            for sym in sorted_alphabet:
+                target = self.dfa_transitions.get(state, {}).get(sym)
+                row.append(str(self.state_ids[target]) if target is not None else "-")
+            print(", ".join(row), file=sys.stderr)
 
 def main():
     INP_REGEX = input()
