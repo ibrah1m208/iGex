@@ -1,41 +1,23 @@
 # iGex - A regex implementation in python
 
-A regex engine: parses a regular expression, builds an NFA (Thompson's construction),
-converts it to a DFA (subset construction), and matches words from an input text block.
-
+A regex engine in python
 Made for an Automaton course exercise
 
+## Description
+- **iGex** reads a regular expression and a block of text from standard input, and prints every word in the text that fully matches the expression. The expression is parsed, into an NFA using Thompson's construction, then converted to a DFA using subset construction.
+- **Debug Mode** prints a DFA transition table to `stderr` in CSV format
 
 ## Run
-
-Input format: first line is the regex, remaining lines are the text block (read until EOF).
-
-```bash
-python3 regexpert.py < input.txt
+**Usage**
 ```
-
-With the DFA transition matrix printed to stderr:
-
-```bash
-python3 regexpert.py --debug < input.txt
+python3 main.py [--debug] < input.txt
 ```
-
-To separate matches (stdout) from the debug matrix (stderr) into files:
-
+**Input format** first line is the regex, remaining lines are the text block (read until EOF).
 ```bash
-python3 regexpert.py --debug < input.txt 1>matches.txt 2>debug.csv
+python3 main.py < input.txt
 ```
 
 Interactive (type the regex, then the text, then Ctrl+D for EOF):
-
 ```bash
-python3 regexpert.py
-```
-
-## Test
-
-Run the provided test cases:
-
-```bash
-./test.sh
+python3 main.py
 ```
