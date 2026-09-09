@@ -34,7 +34,7 @@ python3 regexpert.py
 
 ## Test
 
-Run the provided test cases from the assignment doc:
+Run the provided test cases:
 
 ```bash
 ./test.sh
