@@ -246,7 +246,8 @@ class DFACompile:
                 return False
             curr_state = self.dfa_transitions[curr_state][letter]
         return curr_state in self.dfa_accept
-    def print_debug_csv(self):
+
+    def debug(self):
         self.assign_state_ids()
         sorted_alphabet = sorted(self.alphabet)
 
@@ -267,12 +268,27 @@ class DFACompile:
             print(", ".join(row), file=sys.stderr)
 
 def main():
-    INP_REGEX = input()
-    TEXT = []
-    for word in TEXT:
-        # TODO
-        # If Not valid, return -1 to stderr
-        # If valid but reject, pass
-        # If valid and accept, print(word)
-        pass
-    return 0
+    debug = "--debug" in sys.argv
+
+    INP_REGEX = sys.stdin.readline().rstrip("\n")
+    TEXT = sys.stdin.read()
+
+    try:
+        AST = Parser(INP_REGEX).parse()
+        COMPILER = NFACompile()
+        NFA_start, NFA_accept = COMPILER.build_nfa(AST)
+        DFA = DFACompile(COMPILER.transitions, NFA_start, NFA_accept, COMPILER.alphabet)
+        DFA.compile()
+    except ValueError as e:
+        print(f"igExpert: Parse Error - {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if debug:
+        DFA.debug()
+
+    for word in TEXT.split():
+        if DFA.match(word): print(word)
+
+
+if __name__ == "__main__":
+    main()
